@@ -1,0 +1,2 @@
+# pathalizer
+Visualize pathfinding algorithms
