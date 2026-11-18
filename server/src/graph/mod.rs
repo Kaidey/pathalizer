@@ -55,7 +55,7 @@ impl AdjacencyList {
                         if id(nr, nc).0 == 3 || id(nr, nc).0 == 8 || id(nr, nc).0 == 9 {
                             continue;
                         }
-                        adj[id(r, c).0].push(Edge {
+                        adj[id(r, c).id()].push(Edge {
                             to: id(nr, nc),
                             cost: grid[nr][nc],
                         });

@@ -11,14 +11,14 @@ impl PathFinder for Dijkstra {
     fn run(adj_list: &AdjacencyList, start: NodeId, end: NodeId) -> Option<PathFinderResult> {
         let mut min_heap = BinaryHeap::new();
         // Each item is (cost, path), while the id of the node is its position on the Vec
-        // This will hold the least cost path to start for each node
+        // This will hold the neighbour with the least cost to start for each node
         let mut relaxed_nodes: Vec<(u32, Option<NodeId>)> =
             vec![(u32::MAX, None); adj_list.node_count()];
 
         // (cost, NodeId)
         // Pushing Reverse items makes it a min heap, since a BinaryHeap is a max heap
         // This will hold all the discovered but not visited nodes, keeping the least cost one at
-        // the top
+        // the top to be visited next
         min_heap.push(Reverse((0u32, start)));
         relaxed_nodes[start.id()] = (0, None);
 
@@ -44,9 +44,8 @@ impl PathFinder for Dijkstra {
 
                         if current_n_cost > new_n_cost {
                             relaxed_nodes[n.to.id()] = (new_n_cost, Some(id));
+                            min_heap.push(Reverse((new_n_cost, n.to)));
                         }
-
-                        min_heap.push(Reverse((new_n_cost, n.to)));
                     }
                 }
                 None => {}
