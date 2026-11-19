@@ -12,12 +12,13 @@ pub enum ValidationError {
     TooManyNodes,
     TooManyEdges,
     EdgeOutOfBounds { from: usize, to: usize },
+    NodeOutOfBounds(NodeId),
 }
 
 pub type NodeId = usize;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct NodeCost(u32);
+pub struct NodeCost(pub u32);
 
 impl NodeCost {
     pub const ZERO: Self = Self(0);

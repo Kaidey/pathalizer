@@ -1,42 +1,51 @@
 use crate::{
     algos::dijkstra::Dijkstra,
     graph::{AdjacencyList, Edge, NodeId},
+    temp::ResultDto,
 };
 
 pub mod algos;
-pub mod api;
 pub mod graph;
+pub mod temp;
+
+use rouille::{Request, Response};
+use temp::{SolveRequest, decode};
 
 fn main() {
+    let addr = "127.0.0.1:8080";
 
-    // let grid = vec![
-    //     vec![1, 1, 1, 4, 10],
-    //     vec![1, 1, 10, 10, 10],
-    //     vec![1, 1, 1, 1, 1],
-    //     vec![1, 1, 1, 7, 1],
-    //     vec![1, 1, 1, 1, 8],
-    // ];
-    //
-    // let adj = AdjacencyList::from_grid(&grid);
+    println!("Listening on {addr}");
 
-    // TODO: Check for out of bounds IDs
-    // TODO: Check start/end are walls (no adjacency in adj). This will be done on FE as well
-    //          - Using the same wall as start and end returns no path and cost 0 as it should if
-    //          the node was not a wall
-    //          - Using valid start and wall end returns no path.
-    //          - Using wall start and valid end returns no path
-    //          - Using wall start and wall end returns no path
-    //          Should error if end or start are
-    //          walls?
-    // let res = adj.calc_sp::<Dijkstra>(NodeId(1), NodeId(22));
-    //
-    // match res {
-    //     Some(r) => {
-    //         println!("Path: {:?}", r.ordered_path);
-    //         println!("Total cost: {}", r.total_cost);
-    //     }
-    //     None => {
-    //         println!("No path")
-    //     }
-    // }
+    rouille::start_server(addr, |request| handler(request));
+}
+
+
+// Temporary
+fn handler(request: &Request) -> Response {
+    match (request.method(), request.url().as_str()) {
+        ("POST", "/solve") => match decode(request) {
+            Ok(req) => {
+                let res = req.graph.calc_sp::<Dijkstra>(req.start, req.end);
+
+                match res {
+                    Some(result) => {
+                        let res_dto = ResultDto::from(result);
+                        let json = &serde_json::json!({
+                            "result": {
+                                "path": &res_dto.path,
+                                "total_cost": &res_dto.cost
+                            }
+                        });
+
+                        return Response::json(json);
+                    }
+                    None => {
+                        return Response::json(&serde_json::json!({"result" : "No path found"}));
+                    }
+                }
+            }
+            Err(resp) => resp,
+        },
+        _ => Response::empty_404(),
+    }
 }
