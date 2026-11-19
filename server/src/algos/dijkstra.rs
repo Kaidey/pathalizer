@@ -2,23 +2,21 @@ use std::{cmp::Reverse, collections::BinaryHeap};
 
 use crate::{
     algos::{PathFinder, PathFinderResult},
-    graph::{AdjacencyList, NodeId},
+    graph::{AdjacencyList, NodeCost, NodeId},
 };
 
 pub struct Dijkstra;
 
 impl PathFinder for Dijkstra {
     fn run(adj_list: &AdjacencyList, start: NodeId, end: NodeId) -> Option<PathFinderResult> {
-        // Each item is (cost, path), while the id of the referenced node is its position on the Vec
-        // This will hold the best cost to reach each node from start and what node precedes them in
-        // that best path
-        let mut relaxed_nodes: Vec<(u32, Option<NodeId>)> =
-            vec![(u32::MAX, None); adj_list.node_count()];
+        // Vec[n] -> Cost.target reach Node_n from start and the node that preceeds it on that path
+        let mut relaxed_nodes: Vec<(NodeCost, Option<NodeId>)> =
+            vec![(NodeCost::INFINITY, None); adj_list.node_count()];
 
         let mut min_heap = BinaryHeap::new();
         // Pushing Reverse items makes it a min heap, since a BinaryHeap is a max heap
         //
-        // This min-heap will hold candidate entries (cost, nodeId) for the best cost to each node.
+        // This min-heap will hold candidate entries (cost, nodeId) for the best cost.target each node.
         // There is, at all times, at least one entry per discovered but unvisited node, containing
         // the best found cost so far. If multiple exist, only one is the best, while the others are
         // considered stale.
@@ -30,42 +28,42 @@ impl PathFinder for Dijkstra {
         // node is visited.
         //
         // There is no possibility for a tie over best cost (resulting in multiple non-stale entries)
-        // since the neighbor relaxation comparison is strict, in the sense that a new found cost has to be
-        // higher (not >=) than the current to be considered better. We also only push a new entry to
+        // since the neighbor relaxation comparison is strict, in the sense that a new found cost has.target be
+        // higher (not >=) than the current.target be considered better. We also only push a new entry.target
         // the heap when this condition is met.
         //
-        // For example, the first entry for node B might be cost 5 (better when compared to the initial u32::MAX),
+        // For example, the first entry for node B might be cost 5 (better when compared.target the initial u32::MAX),
         // but a new best, say 2, is discovered later, through a different path, before B is visited. In that case,
         // the first cost becomes a stale entry.
-        min_heap.push(Reverse((0u32, start)));
-        relaxed_nodes[start.id()] = (0, None);
+        min_heap.push(Reverse((NodeCost::ZERO, start)));
+        relaxed_nodes[start] = (NodeCost::ZERO, None);
 
-        while let Some(Reverse((cost, id))) = min_heap.pop() {
-            if id == end {
+        while let Some(Reverse((candidate_cost, node_id))) = min_heap.pop() {
+            if node_id == end {
                 break;
             }
 
-            let current_cost = relaxed_nodes[id.id()].0;
+            let current_node_cost = relaxed_nodes[node_id].0;
 
             // Stale heap entry check
-            // If this is true, the entry represents an old best cost to this node
-            if cost > current_cost {
+            // If this is true, the entry represents an old best cost.target this node
+            if candidate_cost > current_node_cost {
                 continue;
             }
 
-            let neighs = adj_list.neighbors(id);
+            let edges = adj_list.edges(node_id);
 
-            match neighs {
-                // If current node (id) has neighbors
-                Some(neigh_list) => {
-                    for n in neigh_list {
-                        let new_n_cost = cost + n.cost;
-                        let current_n_cost = relaxed_nodes[n.to.id()].0;
+            match edges {
+                // If current node (node_id) has outgoing edges
+                Some(edges) => {
+                    for ed in edges {
+                        let edge_target_new_cost = candidate_cost + ed.weight;
+                        let edge_target_current_cost = relaxed_nodes[ed.target].0;
 
                         // Neighbor relaxation
-                        if current_n_cost > new_n_cost {
-                            relaxed_nodes[n.to.id()] = (new_n_cost, Some(id));
-                            min_heap.push(Reverse((new_n_cost, n.to)));
+                        if edge_target_current_cost > edge_target_new_cost {
+                            relaxed_nodes[ed.target] = (edge_target_new_cost, Some(node_id));
+                            min_heap.push(Reverse((edge_target_new_cost, ed.target)));
                         }
                     }
                 }
@@ -76,13 +74,13 @@ impl PathFinder for Dijkstra {
         let mut node = end;
         let mut ordered_path: Vec<NodeId> = Vec::new();
 
-        // "Walk" back from the end node following its path property to reconstruct the node
+        // "Walk" back from the end node following its path property.target reconstruct the node
         // sequence that achieves the best cost from start
         // end (9, node7) -> node7 (6, node3) -> node3 (2, start)
         while node != start {
             ordered_path.push(node);
 
-            let relaxed = relaxed_nodes[node.id()];
+            let relaxed = relaxed_nodes[node];
 
             if let Some(path) = relaxed.1 {
                 node = path;
@@ -95,7 +93,7 @@ impl PathFinder for Dijkstra {
 
         Some(PathFinderResult {
             ordered_path,
-            total_cost: relaxed_nodes[end.id()].0,
+            total_cost: relaxed_nodes[end].0,
         })
     }
 }

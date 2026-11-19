@@ -1,4 +1,4 @@
-use crate::graph::{AdjacencyList, NodeId};
+use crate::graph::{AdjacencyList, NodeCost, NodeId};
 
 pub mod dijkstra;
 pub mod astar;
@@ -9,7 +9,7 @@ enum AlgoError{
 
 pub struct PathFinderResult{
     pub ordered_path: Vec<NodeId>,
-    pub total_cost: u32
+    pub total_cost: NodeCost
 }
 
 pub trait PathFinder{
