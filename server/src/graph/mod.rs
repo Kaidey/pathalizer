@@ -15,8 +15,11 @@ pub enum ValidationError {
     NodeOutOfBounds(NodeId),
 }
 
+// Semantics
 pub type NodeId = usize;
 
+// Semantics and meaningul constants
+// No type safety required (for now)
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct NodeCost(pub u32);
 
@@ -77,41 +80,5 @@ impl AdjacencyList {
 
     pub fn node_count(&self) -> usize {
         self.0.len()
-    }
-
-    // TODO: Remove after testing
-    pub fn from_grid(grid: &[Vec<u32>]) -> Self {
-        let rows = grid.len();
-        let cols = grid.first().map_or(0, |row| row.len());
-
-        let mut adj: Vec<Vec<Edge>> = vec![Vec::new(); rows * cols];
-
-        for r in 0..rows {
-            for c in 0..cols {
-                let candidates = [
-                    r.checked_sub(1).map(|r| (r, c)), // up
-                    Some((r + 1, c)),                 // down
-                    c.checked_sub(1).map(|c| (r, c)), // left
-                    Some((r, c + 1)),                 // right
-                ];
-
-                for (nr, nc) in candidates.into_iter().flatten() {
-                    if nr < rows && nc < cols {
-                        let curr_id = r * cols + c;
-                        let n_id = nr * cols + nc;
-                        adj[curr_id].push(Edge {
-                            target: n_id,
-                            weight: grid[nr][nc],
-                        });
-                    }
-                }
-            }
-        }
-        for (id, edges) in adj.iter().enumerate() {
-            let list: Vec<(NodeId, u32)> = edges.iter().map(|e| (e.target, e.weight)).collect();
-            println!("{id} -> {list:?}");
-        }
-
-        Self(adj)
     }
 }
