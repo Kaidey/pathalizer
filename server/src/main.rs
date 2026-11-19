@@ -1,6 +1,5 @@
 use crate::{
     algos::dijkstra::Dijkstra,
-    graph::{AdjacencyList, Edge, NodeId},
     temp::ResultDto,
 };
 
@@ -9,7 +8,7 @@ pub mod graph;
 pub mod temp;
 
 use rouille::{Request, Response};
-use temp::{SolveRequest, decode};
+use temp::decode;
 
 fn main() {
     let addr = "127.0.0.1:8080";
@@ -18,7 +17,6 @@ fn main() {
 
     rouille::start_server(addr, |request| handler(request));
 }
-
 
 // Temporary
 fn handler(request: &Request) -> Response {
