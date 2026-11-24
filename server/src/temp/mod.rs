@@ -3,7 +3,7 @@
 // AI-assisted
 
 use crate::{
-    algos::PathFinderResult,
+    algos::{PathFinderResult, PathFinderTrace},
     graph::{AdjacencyList, Edge, NodeId, ValidationError},
 };
 use rouille::{Request, Response};
@@ -19,6 +19,41 @@ pub struct SolveRequest {
 }
 
 // ---------- wire types (the only part that is used in interactions with serde) ----------
+
+#[derive(Serialize, Deserialize)]
+pub struct TraceDto {
+    visited: NodeId,
+    adj_checked: Vec<NodeId>,
+    adj_updated: Vec<Option<(u32, u32)>>,
+    relaxed_nodes: Vec<(u32, Option<NodeId>)>,
+}
+
+impl TraceDto {
+    pub fn new(
+        visited: NodeId,
+        checked: Vec<NodeId>,
+        updated: Vec<Option<(u32, u32)>>,
+        relaxed: Vec<(u32, Option<NodeId>)>,
+    ) -> Self {
+        Self {
+            visited,
+            adj_checked: checked,
+            adj_updated: updated,
+            relaxed_nodes: relaxed,
+        }
+    }
+}
+
+// This only exists so we don't have do derive Serialize on NodeCost which is the first element of
+// the tuple in relaxed_nodes items. This keeps core functionality separate from serde
+// NodeId doesn't need workarounds because it is only an alias for usize
+impl From<PathFinderTrace> for TraceDto {
+    fn from(value: PathFinderTrace) -> Self {
+        let rel: Vec<(u32, Option<NodeId>)> =
+            value.relaxed_nodes.iter().map(|r| (r.0.0, r.1)).collect();
+        TraceDto::new(value.visited, value.adj_checked, value.adj_updated, rel)
+    }
+}
 
 #[derive(Deserialize)]
 struct EdgeDto {
@@ -37,6 +72,7 @@ struct RequestDto {
 pub struct ResultDto {
     pub path: Vec<NodeId>,
     pub cost: u32,
+    pub trace: Vec<TraceDto>,
 }
 
 impl From<PathFinderResult> for ResultDto {
@@ -44,6 +80,7 @@ impl From<PathFinderResult> for ResultDto {
         Self {
             path: value.ordered_path,
             cost: value.total_cost.0,
+            trace: value.trace.into_iter().map(TraceDto::from).collect(),
         }
     }
 }

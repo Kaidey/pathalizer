@@ -1,7 +1,7 @@
 use std::{cmp::Reverse, collections::BinaryHeap};
 
 use crate::{
-    algos::{PathFinder, PathFinderResult},
+    algos::{PathFinder, PathFinderResult, PathFinderTrace},
     graph::{AdjacencyList, NodeCost, NodeId},
 };
 
@@ -37,11 +37,19 @@ impl PathFinder for Dijkstra {
         // the first cost becomes a stale entry.
         min_heap.push(Reverse((NodeCost::ZERO, start)));
         relaxed_nodes[start] = (NodeCost::ZERO, None);
+        let mut trace_list = vec![];
 
         while let Some(Reverse((candidate_cost, node_id))) = min_heap.pop() {
             if node_id == end {
                 break;
             }
+
+            let mut trace = PathFinderTrace {
+                visited: node_id,
+                adj_checked: vec![],
+                adj_updated: vec![],
+                relaxed_nodes: vec![],
+            };
 
             let current_node_cost = relaxed_nodes[node_id].0;
 
@@ -57,18 +65,28 @@ impl PathFinder for Dijkstra {
                 // If current node (node_id) has outgoing edges
                 Some(edges) => {
                     for ed in edges {
+                        trace.adj_checked.push(ed.target);
+
                         let edge_target_new_cost = candidate_cost + ed.weight;
                         let edge_target_current_cost = relaxed_nodes[ed.target].0;
 
                         // Neighbor relaxation
                         if edge_target_current_cost > edge_target_new_cost {
+                            trace
+                                .adj_updated
+                                .push(Some((edge_target_current_cost.0, edge_target_new_cost.0)));
+
                             relaxed_nodes[ed.target] = (edge_target_new_cost, Some(node_id));
                             min_heap.push(Reverse((edge_target_new_cost, ed.target)));
+                        } else {
+                            trace.adj_updated.push(None);
                         }
                     }
                 }
                 None => {}
             }
+            trace.relaxed_nodes = relaxed_nodes.clone();
+            trace_list.push(trace);
         }
 
         let mut node = end;
@@ -94,6 +112,7 @@ impl PathFinder for Dijkstra {
         Some(PathFinderResult {
             ordered_path,
             total_cost: relaxed_nodes[end].0,
+            trace: trace_list,
         })
     }
 }

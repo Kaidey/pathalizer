@@ -31,7 +31,8 @@ fn handler(request: &Request) -> Response {
                         let json = &serde_json::json!({
                             "result": {
                                 "path": &res_dto.path,
-                                "total_cost": &res_dto.cost
+                                "total_cost": &res_dto.cost,
+                                "trace": &res_dto.trace
                             }
                         });
 
