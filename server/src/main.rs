@@ -1,7 +1,4 @@
-use crate::{
-    algos::dijkstra::Dijkstra,
-    temp::ResultDto,
-};
+use crate::{algos::dijkstra::Dijkstra, temp::ResultDto};
 
 pub mod algos;
 pub mod graph;
@@ -29,11 +26,9 @@ fn handler(request: &Request) -> Response {
                     Some(result) => {
                         let res_dto = ResultDto::from(result);
                         let json = &serde_json::json!({
-                            "result": {
-                                "path": &res_dto.path,
-                                "total_cost": &res_dto.cost,
-                                "trace": &res_dto.trace
-                            }
+                            "path": &res_dto.path,
+                            "total_cost": &res_dto.cost,
+                            "trace": &res_dto.trace
                         });
 
                         return Response::json(json);
