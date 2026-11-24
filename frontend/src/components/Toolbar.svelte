@@ -3,22 +3,46 @@
     import GridSizer from "./GridSizer.svelte";
     import { appState } from "../state/app.svelte";
     import { grid } from "../state/grid.svelte";
+    import type { Trace } from "../state/grid.svelte";
 
     let showSizer = $state(false);
 
-    function solve() {
+    interface SolveResponse {
+        path: Array<number>;
+        cost: number;
+        trace: Array<Trace>;
+    }
+
+    async function solve() {
         let obj = {
             start: grid.start,
             end: grid.end,
             adjacency: grid.toAdjacencyList(),
         };
 
-        let res = fetch("/solve", {
-            method: "POST",
-            body: JSON.stringify(obj),
-        }).then((r) => r.json());
+        try {
+            // /solve is the relative URL configured in the vite proxy to avoid CORS issues
+            // https://dev.to/aartijangid23/how-to-fix-cors-errors-in-a-local-development-environment-132l
+            const res = await fetch("/solve", {
+                method: "POST",
+                body: JSON.stringify(obj),
+            });
 
-        console.log(res);
+            if (!res.ok){
+                throw new Error("Server returned ${res.status}");
+            }
+
+            const res_data: SolveResponse = await res.json();
+            grid.setSolution(res_data.path);
+            grid.setVisited(res_data.trace);
+
+        } catch (err) {
+            throw new Error("Failed to solve: ${err}");
+        }
+    }
+
+    function clearPath(){
+        grid.clearSolution()
     }
 </script>
 
@@ -38,9 +62,6 @@
             <option value={node.value}>{node.label}</option>
         {/each}
     </select>
-    <button
-        onclick={solve}
-    >
-        Solve
-    </button>
+    <button onclick={solve}> Solve </button>
+    <button onclick={clearPath}> Clear Path </button>
 </div>

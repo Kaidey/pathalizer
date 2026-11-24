@@ -1,16 +1,36 @@
 import { SvelteSet } from "svelte/reactivity";
 
+export interface NeighborUpdate {
+    old_cost: number;
+    new_cost: number;
+}
+
+export interface RelaxedNode {
+    cost: number;
+    id: number;
+}
+
+export interface Trace {
+    visited: number;
+    adj_checked: Array<number>;
+    adj_updated: Array<NeighborUpdate>;
+    relaxed_nodes: Array<RelaxedNode>;
+}
+
 class GridState {
     rows = $state(0);
     cols = $state(0);
     start = $state(-1);
     end = $state(-1);
     walls = new SvelteSet<number>();
+    solution = new SvelteSet<number>();
+    visited = new SvelteSet<number>();
 
     generate(rows: number, cols: number) {
         this.rows = rows;
         this.cols = cols;
         this.walls.clear();
+        this.solution.clear();
         this.start = -1;
         this.end = -1;
     }
@@ -50,13 +70,33 @@ class GridState {
         this.end = id;
     }
 
+    setSolution(sol: Array<number>) {
+        for (var s in sol) {
+            this.solution.add(sol[s])
+        }
+    }
+
+    clearSolution() {
+        this.solution.clear()
+        this.visited.clear()
+    }
+
+    setVisited(traceList: Array<Trace>) {
+        for (var t in traceList) {
+            let trace = traceList[t];
+            for (var v in trace.adj_checked) {
+                this.visited.add(trace.adj_checked[v]);
+            }
+        }
+    }
+
     toAdjacencyList() {
 
         let total_nodes = this.rows * this.cols;
         let row_count = 0;
         let adjacency = new Array();
 
-        for (let i = 0; i < total_nodes - 1; i++) {
+        for (let i = 0; i < total_nodes; i++) {
 
             // If remainder is 0, we're at the start of a new row
             // this.cols = 5 -> 0 % 5 = 0, 5 % 5 = 0, 10 % 5 = 0, ...

@@ -1,4 +1,4 @@
-#grid-container{
+#grid-container {
     position: relative;
     margin-top: 25vh;
 }
@@ -8,7 +8,11 @@
     display: grid;
     grid-template-columns: repeat(var(--cols), calc(100% / var(--cols)));
     border: 2px solid black;
+    user-select: none;
+    -webkit-user-select: none;
 }
+
+
 
 .cell {
     width: 24px;
@@ -18,14 +22,75 @@
     background-color: white;
 }
 
-.wall{
+.wall {
     background-color: black;
 }
 
-.start{
+.start {
     background-color: forestgreen;
 }
 
-.end{
+.end {
     background-color: red;
+}
+
+.path {
+    animation: animateSP;
+    animation-delay: calc(var(--id) * 50ms);
+    animation-duration: 0.2s;
+    animation-iteration-count: 1;
+    animation-fill-mode: forwards;
+}
+
+.visited {
+    animation: animateVisited;
+    animation-duration: 1s;
+    animation-delay: calc(var(--id) * 20ms);
+    animation-iteration-count: 1;
+    animation-fill-mode: forwards;
+    animation-timing-function: ease-in-out;
+}
+
+@keyframes animateVisited {
+    0% {
+        background-color: white;
+        opacity: 0.3;
+    }
+
+    25% {
+        background-color: lightblue;
+        opacity: 0.5;
+    }
+
+    50% {
+        background-color: lightskyblue;
+        opacity: 0.6;
+    }
+
+    100% {
+        background-color: dodgerblue;
+        opacity: 0.75;
+    }
+}
+
+@keyframes animateSP {
+    0% {
+        background-color: white;
+        opacity: 0.3;
+    }
+
+    25% {
+        background-color: rgb(155, 154, 89);
+        opacity: 0.4;
+    }
+
+    50% {
+        background-color: rgb(148, 146, 46);
+        opacity: 0.5;
+    }
+
+    100% {
+        background-color: rgb(233, 236, 8);
+        opacity: 0.65;
+    }
 }

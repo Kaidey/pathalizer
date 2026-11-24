@@ -30,16 +30,30 @@
 </script>
 
 <div id="grid-container">
-    <div id="grid" style:--cols={grid.cols} style:--rows={grid.rows}>
+    <!-- TODO: Maybe fix later -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div
+        id="grid"
+        style:--cols={grid.cols}
+        style:--rows={grid.rows}
+        onpointerleave={() => (painting = false)}
+    >
         {#each { length: grid.rows * grid.cols }, id}
+            <!-- class:<name>={expr} assigns the class <name> to the element if expr evals to true -->
             <div
                 class="cell"
                 class:wall={grid.walls.has(id)}
                 class:start={id === grid.start}
                 class:end={id === grid.end}
+                class:path={grid.solution.has(id) && id != grid.end}
+                class:visited={grid.visited.has(id) &&
+                    !grid.solution.has(id) &&
+                    id != grid.start &&
+                    id != grid.end}
                 onpointerdown={() => pointerDown(id)}
                 onpointerenter={() => pointerEnterCell(id)}
                 onpointerup={() => (painting = false)}
+                style:--id={id}
             ></div>
         {/each}
     </div>
